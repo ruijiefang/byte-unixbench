@@ -25,15 +25,9 @@ char SCCSid[] = "@(#) @(#)pipe.c:3.3 -- 5/15/91 19:30:20";
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "timeit.c"
 
+#define ITERS 3941254UL
 unsigned long iter;
-
-void report()
-{
-	fprintf(stderr,"COUNT|%ld|1|lps\n", iter);
-	exit(0);
-}
 
 int main(argc, argv)
 int	argc;
@@ -42,19 +36,11 @@ char	*argv[];
 	char	buf[512];
 	int		pvec[2], duration;
 
-	if (argc != 2) {
-		fprintf(stderr,"Usage: %s duration\n", argv[0]);
-		exit(1);
-		}
-
-	duration = atoi(argv[1]);
-
 	pipe(pvec);
 
-	wake_me(duration, report);
 	iter = 0;
 
-	while (1) {
+	while (iter <= ITERS) {
 		if (write(pvec[1], buf, sizeof(buf)) != sizeof(buf)) {
 			if ((errno != EINTR) && (errno != 0))
 				fprintf(stderr,"write failed, error %d\n", errno);
@@ -65,4 +51,6 @@ char	*argv[];
 			}
 		iter++;
 	}
+  printf("done; %ld iters\n", ITERS);
+  return 0;
 }

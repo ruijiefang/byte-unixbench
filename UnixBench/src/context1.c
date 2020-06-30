@@ -29,13 +29,8 @@ char SCCSid[] = "@(#) @(#)context1.c:3.3 -- 5/15/91 19:30:18";
 #include <errno.h>
 #include "timeit.c"
 
+#define ITERS 2010580UL
 unsigned long iter;
-
-void report()
-{
-	fprintf(stderr, "COUNT|%lu|1|lps\n", iter);
-	exit(0);
-}
 
 int main(argc, argv)
 int	argc;
@@ -46,16 +41,8 @@ char	*argv[];
 	int	p1[2], p2[2];
 	ssize_t ret;
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: context duration\n");
-		exit(1);
-	}
-
-	duration = atoi(argv[1]);
-
 	/* set up alarm call */
 	iter = 0;
-	wake_me(duration, report);
 	signal(SIGPIPE, SIG_IGN);
 
 	if (pipe(p1) || pipe(p2)) {
@@ -66,12 +53,12 @@ char	*argv[];
 	if (fork()) {	/* parent process */
 		/* master, write p1 & read p2 */
 		close(p1[0]); close(p2[1]);
-		while (1) {
+		while (iter <= ITERS) {
 			if ((ret = write(p1[1], (char *)&iter, sizeof(iter))) != sizeof(iter)) {
 				if ((ret == -1) && (errno == EPIPE)) {
 					alarm(0);
-					report(); /* does not return */
-				}
+				  exit(0);
+        }
 				if ((ret == -1) && (errno != 0) && (errno != EINTR))
 					perror("master write failed");
 				exit(1);
@@ -79,8 +66,8 @@ char	*argv[];
 			if ((ret = read(p2[0], (char *)&check, sizeof(check))) != sizeof(check)) {
 				if ((ret == 0)) { /* end-of-stream */
 					alarm(0);
-					report(); /* does not return */
-				}
+				  exit(0);
+        }
 				if ((ret == -1) && (errno != 0) && (errno != EINTR))
 					perror("master read failed");
 				exit(1);
@@ -96,12 +83,12 @@ char	*argv[];
 	else { /* child process */
 		/* slave, read p1 & write p2 */
 		close(p1[1]); close(p2[0]);
-		while (1) {
+		while (iter <= ITERS) {
 			if ((ret = read(p1[0], (char *)&check, sizeof(check))) != sizeof(check)) {
 				if ((ret == 0)) { /* end-of-stream */
 					alarm(0);
-					report(); /* does not return */
-				}
+				  exit(0);
+        }
 				if ((ret == -1) && (errno != 0) && (errno != EINTR))
 					perror("slave read failed");
 				exit(1);
@@ -114,8 +101,8 @@ char	*argv[];
 			if ((ret = write(p2[1], (char *)&iter, sizeof(iter))) != sizeof(check)) {
 				if ((ret == -1) && (errno == EPIPE)) {
 					alarm(0);
-					report(); /* does not return */
-				}
+				  exit(0);
+        }
 				if ((ret == -1) && (errno != 0) && (errno != EINTR))
 					perror("slave write failed");
 				exit(1);
@@ -123,4 +110,5 @@ char	*argv[];
 			iter++;
 		}
 	}
+  printf("done; %ld iters\n", ITERS);
 }

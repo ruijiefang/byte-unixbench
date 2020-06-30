@@ -27,13 +27,8 @@ char SCCSid[] = "@(#) @(#)spawn.c:3.3 -- 5/15/91 19:30:20";
 #include <sys/wait.h>
 #include "timeit.c"
 
+#define ITERS 115377UL
 unsigned long iter;
-
-void report()
-{
-	fprintf(stderr,"COUNT|%lu|1|lps\n", iter);
-	exit(0);
-}
 
 int main(argc, argv)
 int	argc;
@@ -47,17 +42,12 @@ char	*argv[];
 		exit(1);
 	}
 
-	duration = atoi(argv[1]);
 
 	iter = 0;
-	wake_me(duration, report);
 
-	while (1) {
+	while (iter <= ITERS) {
 		if ((slave = fork()) == 0) {
 			/* slave .. boring */
-#if debug
-			printf("fork OK\n");
-#endif
 			/* kill it right away */
 			exit(0);
 		} else if (slave < 0) {
@@ -73,8 +63,7 @@ char	*argv[];
 			exit(2);
 		}
 		iter++;
-#if debug
-		printf("Child %d done.\n", slave);
-#endif
-		}
+	}
+  printf("done; %ld iters\n", ITERS);
+  return 0;
 }

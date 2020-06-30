@@ -28,15 +28,9 @@ char SCCSid[] = "@(#) @(#)syscall.c:3.3 -- 5/15/91 19:30:21";
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "timeit.c"
 
+#define ITERS 2269658UL
 unsigned long iter;
-
-void report()
-{
-	fprintf(stderr,"COUNT|%ld|1|lps\n", iter);
-	exit(0);
-}
 
 int main(argc, argv)
 int	argc;
@@ -45,65 +39,17 @@ char	*argv[];
         char   *test;
 	int	duration;
 
-	if (argc < 2) {
-		fprintf(stderr,"Usage: %s duration [ test ]\n", argv[0]);
-                fprintf(stderr,"test is one of:\n");
-                fprintf(stderr,"  \"mix\" (default), \"close\", \"getpid\", \"exec\"\n");
-		exit(1);
-	}
-        if (argc > 2)
-            test = argv[2];
-        else
-            test = "mix";
-
-	duration = atoi(argv[1]);
-
+  test = "mix";
+	
 	iter = 0;
-	wake_me(duration, report);
-
-        switch (test[0]) {
-        case 'm':
-	   while (1) {
+	while (iter <= ITERS) {
 		close(dup(0));
 		getpid();
 		getuid();
 		umask(022);
 		iter++;
-	   }
-	   /* NOTREACHED */
-        case 'c':
-           while (1) {
-                close(dup(0));
-                iter++;
-           }
-           /* NOTREACHED */
-        case 'g':
-           while (1) {
-                getpid();
-                iter++;
-           }
-           /* NOTREACHED */
-        case 'e':
-           while (1) {
-                pid_t pid = fork();
-                if (pid < 0) {
-                    fprintf(stderr,"%s: fork failed\n", argv[0]);
-                    exit(1);
-                } else if (pid == 0) {
-                    execl("/bin/true", "/bin/true", (char *) 0);
-                    fprintf(stderr,"%s: exec /bin/true failed\n", argv[0]);
-                    exit(1);
-                } else {
-                    if (waitpid(pid, NULL, 0) < 0) {
-                        fprintf(stderr,"%s: waitpid failed\n", argv[0]);
-                        exit(1);
-                    }
-                }
-                iter++;
-           }
-           /* NOTREACHED */
-        }
-
-        exit(9);
+	}
+  printf("done; %ld iters\n", ITERS);
+  return 0;
 }
 

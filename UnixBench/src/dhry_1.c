@@ -40,13 +40,8 @@ char SCCSid[] = "@(#) @(#)dhry_1.c:3.4 -- 5/15/91 19:30:21";
 #include "dhry.h"
 #include "timeit.c"
 
+#define ITERS 202550098UL
 unsigned long Run_Index;
-
-void report()
-{
-	fprintf(stderr,"COUNT|%ld|1|lps\n", Run_Index);
-	exit(0);
-}
 
 /* Global Variables: */
 
@@ -164,14 +159,7 @@ char	*argv[];
   printf ("Execution starts, %d runs through Dhrystone\n", Number_Of_Runs);
 #endif /* PRATTLE */
 
-  if (argc != 2) {
-    fprintf(stderr, "Usage: %s duration\n", argv[0]);
-    exit(1);
-    }
-
-  duration = atoi(argv[1]);
   Run_Index = 0;
-  wake_me(duration, report);
 
   /***************/
   /* Start timer */
@@ -187,7 +175,7 @@ char	*argv[];
 #endif
 #endif /* SELF_TIMED */
 
-  for (Run_Index = 1; ; ++Run_Index)
+  for (Run_Index = 1; Run_Index <= ITERS; ++Run_Index)
   {
 
     Proc_5();
